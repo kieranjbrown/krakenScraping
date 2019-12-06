@@ -1,6 +1,7 @@
 import csv
 import random
 from decimal import Decimal
+from datetime import datetime, timedelta
 
 stocks = ['AAPL', 'MSFT', 'AMZN', 'FB', 'GOOG',
           'GOOGL', 'INTC', 'CMCSA', 'CSCO', 'PEP',
@@ -42,18 +43,21 @@ with open('trades.psv', 'r', newline='') as input_file:
             stock = random.choice(stocks)
             stock_quantity = int(float(row[1]) * 1000)
             price = get_price(row[2])
+            time = datetime.utcfromtimestamp(float(row[3]))
 
             output.writerow(
-                [1, stock, price, stock_quantity, row[3], row[4], row[5], row[6]])
+                [1, stock, price, stock_quantity, time, row[4], row[5], row[6]])
             if random.random() > 0.2:
-                for i in range(random.randint(1, 5)):
+                for i in range(1, random.randint(1, 5)):
                     if random.randint(0, 1) == 1:
                         price_change = round(Decimal(random.uniform(-0.1, 0.1)), 2)
                         price = round(price_change.fma(Decimal(price), Decimal(price)), 4)
 
+                    time += timedelta(hours=random.randint(1, 5), minutes=random.randint(1, 30))
+                    if random.randint(0, 1) == 1:
+                        time += timedelta(days=random.randint(1, 3))
+
                     stock_change = round(Decimal(random.uniform(-0.1, 0.1)), 2)
                     stock_quantity = round(stock_change.fma(stock_quantity, stock_quantity), 0)
-                    # TODO: modify timestamp for trade modifications
                     output.writerow(
-                        [2 + i, stock, price, stock_quantity, row[3], row[4], row[5], row[6]])
-
+                        [1 + i, stock, price, stock_quantity, time, row[4], row[5], row[6]])
