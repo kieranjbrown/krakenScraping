@@ -29,8 +29,8 @@ def get_price(original_price):
     new_price = float(original_price) * 100
     while new_price < 1:
         new_price = new_price * 10
-    if new_price > 1000.0:
-        new_price = new_price * 0.01
+    while new_price > 1000.0:
+        new_price = new_price * 0.1
     return round(new_price, 4)
 
 
@@ -46,7 +46,7 @@ with open('trades.psv', 'r', newline='') as input_file:
             time = datetime.utcfromtimestamp(float(row[3]))
 
             output.writerow(
-                [1, stock, price, stock_quantity, time, row[4], row[5], row[6]])
+                [1, stock, price, stock_quantity, time, row[4], row[5]])
             if random.random() > 0.2:
                 for i in range(1, random.randint(1, 5)):
                     if random.randint(0, 1) == 1:
@@ -60,4 +60,4 @@ with open('trades.psv', 'r', newline='') as input_file:
                     stock_change = round(Decimal(random.uniform(-0.1, 0.1)), 2)
                     stock_quantity = round(stock_change.fma(stock_quantity, stock_quantity), 0)
                     output.writerow(
-                        [1 + i, stock, price, stock_quantity, time, row[4], row[5], row[6]])
+                        [1 + i, stock, price, stock_quantity, time, row[4], row[5]])
