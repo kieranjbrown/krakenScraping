@@ -2,6 +2,7 @@ import csv
 import random
 from decimal import Decimal
 from datetime import datetime, timedelta
+import uuid
 
 stocks = ['AAPL', 'MSFT', 'AMZN', 'FB', 'GOOG',
           'GOOGL', 'INTC', 'CMCSA', 'CSCO', 'PEP',
@@ -34,19 +35,27 @@ def get_price(original_price):
     return round(new_price, 4)
 
 
+def write(output, id, version, stock, price, stock_quantity, time, buy_sell, market_limit):
+    output.write("('{}', {}, '{}', {}, {}, '{}', '{}', '{}')".format(id, version, stock, price, stock_quantity, time, buy_sell, market_limit))
+    output.write(",")
+    output.write("\n")
+
+
 with open('trades.psv', 'r', newline='') as input_file:
-    with open('enriched_trades.psv', 'w', newline='') as output_file:
+    with open('V1.0.1__data.sql', 'w', newline='') as output:
         trades = csv.reader(input_file, delimiter='|')
-        output = csv.writer(output_file, delimiter='|')
-        output.writerow(["version", *next(trades, None)])
+        next(trades, None)
+        output.write("insert into reporting.trade_data (trade_id, version, stock, price, volume, valid_time_start, buy_sell_flag, market_limit_flag) values ")
+        #TODO: figure out putting in valid_time_end for those with edits
+        #TODO: figure out adding system time stamps
         for row in trades:
             stock = random.choice(stocks)
             stock_quantity = int(float(row[1]) * 1000)
             price = get_price(row[2])
             time = datetime.utcfromtimestamp(float(row[3]))
+            id = uuid.uuid4()
 
-            output.writerow(
-                [1, stock, price, stock_quantity, time, row[4], row[5]])
+            write(output, id, 1, stock, price, stock_quantity, time, row[4], row[5])
             if random.random() > 0.2:
                 for i in range(1, random.randint(1, 5)):
                     if random.randint(0, 1) == 1:
@@ -59,5 +68,5 @@ with open('trades.psv', 'r', newline='') as input_file:
 
                     stock_change = round(Decimal(random.uniform(-0.1, 0.1)), 2)
                     stock_quantity = round(stock_change.fma(stock_quantity, stock_quantity), 0)
-                    output.writerow(
-                        [1 + i, stock, price, stock_quantity, time, row[4], row[5]])
+                    write(output, id, 1 + i, stock, price, stock_quantity, time, row[4], row[5])
+        output.write(";")
